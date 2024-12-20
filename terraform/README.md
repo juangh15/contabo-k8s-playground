@@ -22,5 +22,5 @@ terraform -chdir=./environments/playground output -json playground_ssh_private_k
 ```
 
 ```
-terraform -chdir=./environments/playground output -json playground_ssh_private_key | jq -r . > ./ssh_private.key
+echo $(terraform -chdir=./environments/playground output -json playground_root_password | jq -r .)
 ```
