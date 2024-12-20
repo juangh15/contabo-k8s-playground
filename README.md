@@ -37,3 +37,6 @@ export CNTB_OAUTH2_PASS=$API_PASSWORD
 ```
 source ./.contabo_env
 ```
+
+## Provisioning Infrastructure
+Go to terraform folder to start provisioning the infrastructure resources.
