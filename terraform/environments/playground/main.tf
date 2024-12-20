@@ -35,6 +35,7 @@ module "deploy_main_vps_instances" {
     contabo = contabo.playground
   }
   init_script_path = "../../modules/instances/cloud_init.yml"
+  os_version = "ubuntu_22_04"
   ssh_public_key = module.deploy_main_vps_secrets.ssh_public_key
   contabo_ssh_secret_ids = [module.deploy_main_vps_secrets.ssh_public_key_id]
 }
