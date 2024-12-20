@@ -25,3 +25,16 @@ module "deploy_main_vps_secrets" {
   contabo_main_ssh_key_name = "main_ssh_key"
   contabo_main_root_password_name = "main_root_password"
 }
+
+
+module "deploy_main_vps_instances" {
+  depends_on = [module.deploy_main_vps_secrets]
+  source       = "../../modules/instances"
+
+  providers = {
+    contabo = contabo.playground
+  }
+  init_script_path = "../../modules/instances/cloud_init.yml"
+  ssh_public_key = module.deploy_main_vps_secrets.ssh_public_key
+  contabo_ssh_secret_ids = [module.deploy_main_vps_secrets.ssh_public_key_id]
+}
