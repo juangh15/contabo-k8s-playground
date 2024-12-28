@@ -4,7 +4,13 @@
 # .tfstate files
 *.tfstate
 *.tfstate.*
-*env*
+*_env*
+*.env*
+*.lock.hcl*
+*.terraform*
+*.key*
+*_key*
+*.ovpn*
 
 # Crash log files
 crash.log

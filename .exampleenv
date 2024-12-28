@@ -1,0 +1,25 @@
+# REQUIRED:  Replace these with your Contabo secrets:---------------
+CLIENT_ID="<your Contabo client ID>"
+CLIENT_SECRET="<your Contabo client secret>"
+API_USER="<your Contabo API user>"
+API_PASSWORD="<your Contabo API password>"
+# ------------------------------------------------------------------
+
+# Terraform variables
+export TF_VAR_contabo_client_id=$CLIENT_ID
+export TF_VAR_contabo_client_secret=$CLIENT_SECRET
+export TF_VAR_contabo_api_user=$API_USER
+export TF_VAR_contabo_api_password=$API_PASSWORD
+
+# API variables
+export CNTB_OAUTH2_CLIENT_ID=$CLIENT_ID
+export CNTB_OAUTH2_CLIENT_SECRET=$CLIENT_SECRET
+export CNTB_OAUTH2_USER=$API_USER
+export CNTB_OAUTH2_PASS=$API_PASSWORD
+
+# Set credentials
+cntb config set-credentials \
+    --oauth2-clientid=$CNTB_OAUTH2_CLIENT_ID \
+    --oauth2-client-secret=$CNTB_OAUTH2_CLIENT_SECRET \
+    --oauth2-user=$CNTB_OAUTH2_USER \
+    --oauth2-password=$CNTB_OAUTH2_PASS
