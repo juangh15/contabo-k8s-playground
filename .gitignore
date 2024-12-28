@@ -10,6 +10,7 @@
 *.terraform*
 *.key*
 *_key*
+*.ovpn*
 
 # Crash log files
 crash.log
