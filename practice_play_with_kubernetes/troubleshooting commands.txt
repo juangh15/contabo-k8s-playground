@@ -1,0 +1,50 @@
+# Validate nodes
+kubectl get nodes
+kubectl get nodes -o wide
+kubectl describe node node1
+
+# Validate services and ports
+kubectl get svc -A
+
+# Validate running pods
+kubectl get pods --all-namespaces
+
+# Label worker nodes
+kubectl label nodes $(kubectl get nodes | grep worker- | awk '{print $1}') node-role.kubernetes.io/worker=
+
+# Get service Cluster IP
+NGINX_CLUSTER_IP=$(kubectl get services | grep nginx-service | awk '{print $3}')
+echo $NGINX_CLUSTER_IP
+
+# VALIDATION OF HEADERS (execute multiple times)
+curl -s -I $NGINX_CLUSTER_IP | grep Pod-Name
+
+# Troubleshoot single pod
+kubectl exec -it nginx-deployment-57bf7bdd85-zkm6m -- cat /etc/nginx/conf.d/default.conf
+kubectl get pod nginx-deployment-57bf7bdd85-zkm6m -o wide
+kubectl exec -it nginx-deployment-7bfc865697-zfprz -- nginx -s reload
+kubectl get pod nginx-deployment-7bfc865697-zfprz -o wide
+
+# Validate deployments
+kubectl get deployments
+
+
+# Make a full rollout
+kubectl rollout restart deployment nginx-deployment
+
+
+# Delete deployments
+kubectl delete deployments $(kubectl get deployments | grep nginx | awk '{print $1}')
+
+# Delete nodes GRACEFULLY
+kubectl drain node1 --ignore-daemonsets
+kubectl delete node node1
+
+# Install Calico
+kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.0/manifests/calico.yaml
+
+# Install Ngrok
+curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz --output ngrok.tgz
+tar -xvzf ./ngrok.tgz -C /usr/local/bin
+ngrok authtoken REPLACEWITHYOURTOKEN
+ngrok http 80

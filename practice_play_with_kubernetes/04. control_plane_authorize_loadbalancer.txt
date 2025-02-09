@@ -1,0 +1,11 @@
+# Authorize loadbalancer
+cat <<'EOF' > authorize_loadbalancer.sh
+kubectl config view --flatten --minify > kubeconfig-external.yaml
+clear
+cat kubeconfig-external.yaml
+EOF
+
+
+# Execution Phase
+. authorize_loadbalancer.sh
+

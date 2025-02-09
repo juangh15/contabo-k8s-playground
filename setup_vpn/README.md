@@ -138,7 +138,7 @@ Add these rules only if you want to restrict the ports on the server.
 Copy the following command and run it inside the server.
 ```
 # SSH:
-sudo iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT
+sudo iptables -A INPUT -i eth0 -p tcp --dport 2202 -j ACCEPT
 # HTTPS:
 sudo iptables -A INPUT -i eth0 -p udp --dport 443 -j ACCEPT
 # OpenVPN:
@@ -147,6 +147,10 @@ sudo iptables -A INPUT -i eth0 -p udp --dport 1194 -j ACCEPT
 sudo iptables -A INPUT -i eth0 -p udp --dport 53 -j ACCEPT
 # DNS Loopback:
 sudo iptables -A INPUT -i lo -p udp --dport 53 -j ACCEPT
+# UDP VPN:
+sudo iptables -A INPUT -i eth0 -p udp --dport 8388 -j ACCEPT
+# UDP BADVPN:
+sudo iptables -A INPUT -i eth0 -p udp --dport 7300 -j ACCEPT
 # Outer traffic:
 sudo iptables -A OUTPUT -o eth0 -j ACCEPT
 # Deny Not specified traffic:
