@@ -1,0 +1,35 @@
+cat << 'EOF' > node_initial_setup.sh
+# Install basic tools
+echo -e "[base]\nname=CentOS-$releasever - Base\nbaseurl=http://vault.centos.org/centos/7/os/x86_64/\nenabled=1\ngpgcheck=1\ngpgkey=http://vault.centos.org/centos/RPM-GPG-KEY-CentOS-7" | tee /etc/yum.repos.d/CentOS-Base.repo
+rm -rf /etc/yum.repos.d/kubernetes.repo
+yum clean all
+#yum update -y
+yum install unzip nano sudo openssl -y
+
+# Set hostname
+HOSTIP=$(hostname -i)
+echo worker-$(hostname) > /etc/hostname
+hostname $(cat /etc/hostname)
+HOSTNAMESTR=$(hostname)
+sudo sed '/'$HOSTIP'/c\'$HOSTIP'   '$HOSTNAMESTR' '$HOSTNAMESTR'.local' /etc/hosts > /tmp/hosts
+cat /tmp/hosts > /etc/hosts
+rm -rf /tmp/hosts
+exec bash
+EOF
+
+
+cat << 'EOF' > worker_node_initializer.sh
+kubeadm reset -f
+# Disable swap
+swapoff -a
+
+# Join command, replace with the command got from control-plane
+kubeadm join 192.168.0.8:6443 --token drerqr.4bh4i1hduks3ztjf --discovery-token-ca-cert-hash sha256:123
+
+clear
+EOF
+
+# Execution Phase
+. node_initial_setup.sh
+. worker_node_initializer.sh
+
