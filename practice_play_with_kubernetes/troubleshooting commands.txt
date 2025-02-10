@@ -48,3 +48,6 @@ curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz --o
 tar -xvzf ./ngrok.tgz -C /usr/local/bin
 ngrok authtoken REPLACEWITHYOURTOKEN
 ngrok http 80
+
+# Basic http server
+docker run -d --name python310 -v $(pwd):$(pwd) -p 8080:8080 python:3.10 python3 -m http.server 8080 --bind 0.0.0.0 --directory $(pwd)

@@ -1,3 +1,4 @@
+# -----------------------------------------------node_initial_setup--------------------------
 cat << 'EOF' > node_initial_setup.sh
 # Install basic tools
 echo -e "[base]\nname=CentOS-$releasever - Base\nbaseurl=http://vault.centos.org/centos/7/os/x86_64/\nenabled=1\ngpgcheck=1\ngpgkey=http://vault.centos.org/centos/RPM-GPG-KEY-CentOS-7" | tee /etc/yum.repos.d/CentOS-Base.repo
@@ -16,10 +17,19 @@ cat /tmp/hosts > /etc/hosts
 rm -rf /tmp/hosts
 exec bash
 EOF
+# -------------------------------------------------------------------------------------------
 
+
+# -----------------------------------------------control_plane_initializer-------------------
 cat << 'EOF' > control_plane_initializer.sh
+
+# Basic http server to allow nodes find control-plane
+docker pull python:3.10
+docker container rm -f python310 2>/dev/null
+nohup docker run -d --name python310 -v $(pwd):$(pwd) -p 8080:8080 python:3.10 python3 -m http.server 8080 --bind 0.0.0.0 --directory $(pwd) &
+
+# Reset kubeadm and disable swap
 kubeadm reset -f
-# Disable swap
 swapoff -a
 
 # Before Install Calico make sys shared
@@ -36,10 +46,14 @@ chown $(id -u):$(id -g) $HOME/.kube/config
 # Use Kuberouter better supported on Play with Kubernetes
 kubectl apply -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kubeadm-kuberouter.yaml
 
-# Get join command
-clear
-kubeadm token create --print-join-command
+# Save join command
+kubeadm token create --print-join-command > kubeadm_join.sh
+
+# Save Loadbalancer Authorization
+kubectl config view --flatten --minify > kubeconfig_external.yaml
 EOF
+# -------------------------------------------------------------------------------------------
+
 
 # Execution Phase
 . node_initial_setup.sh

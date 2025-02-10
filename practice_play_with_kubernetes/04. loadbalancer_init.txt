@@ -1,33 +1,15 @@
-# Replace the content with the command got from control_plane
-cat <<'EOF' > kubeconfig-external.yaml
-apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: 123123
-    server: https://192.168.0.8:6443
-  name: kubernetes
-contexts:
-- context:
-    cluster: kubernetes
-    user: kubernetes-admin
-  name: kubernetes-admin@kubernetes
-current-context: kubernetes-admin@kubernetes
-kind: Config
-preferences: {}
-users:
-- name: kubernetes-admin
-  user:
-    client-certificate-data: 123123
-    client-key-data: 123123
-
+# Get kubeconfig external
+cat <<'EOF' > get-kubeconfig-external.sh
+# Replace 192.168.0.8 with the IP of control-plane node if different
+curl 192.168.0.8:8080/kubeconfig_external.yaml > ./kubeconfig_external.yaml
 EOF
 
 
 # Get Ips
 cat <<'EOF' > get_worker_ips.sh
-kubectl --kubeconfig=./kubeconfig-external.yaml get nodes -o jsonpath='{.items[*].metadata.name}{"\n"}' \
+kubectl --kubeconfig=./kubeconfig_external.yaml get nodes -o jsonpath='{.items[*].metadata.name}{"\n"}' \
   | grep -o 'worker-node[0-9]\+' \
-  | xargs -I {} kubectl --kubeconfig=./kubeconfig-external.yaml get node {} -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}'
+  | xargs -I {} kubectl --kubeconfig=./kubeconfig_external.yaml get node {} -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}'
 EOF
 
 
@@ -39,6 +21,7 @@ rm -rf /etc/yum.repos.d/kubernetes.repo
 yum clean all
 yum install unzip nano sudo openssl strace -y
 
+# Create basic nginx config to initiate container
 mkdir -p /etc/nginx/conf.d/
 echo "events{} http{ server { listen 80; location / { root /usr/share/nginx/html; } } }" > /etc/nginx/conf.d/nginx.conf
 
@@ -49,5 +32,6 @@ EOF
 
 
 # Execution Phase
+. get-kubeconfig-external.sh
 . loadbalancer_init.sh
 

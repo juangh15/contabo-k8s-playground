@@ -1,3 +1,4 @@
+# -----------------------------------------------node_initial_setup--------------------------
 cat << 'EOF' > node_initial_setup.sh
 # Install basic tools
 echo -e "[base]\nname=CentOS-$releasever - Base\nbaseurl=http://vault.centos.org/centos/7/os/x86_64/\nenabled=1\ngpgcheck=1\ngpgkey=http://vault.centos.org/centos/RPM-GPG-KEY-CentOS-7" | tee /etc/yum.repos.d/CentOS-Base.repo
@@ -16,18 +17,23 @@ cat /tmp/hosts > /etc/hosts
 rm -rf /tmp/hosts
 exec bash
 EOF
+# -------------------------------------------------------------------------------------------
 
 
+# -----------------------------------------------worker_node_initializer---------------------
 cat << 'EOF' > worker_node_initializer.sh
+
+# Reset kubeadm and disable swap
 kubeadm reset -f
-# Disable swap
 swapoff -a
 
-# Join command, replace with the command got from control-plane
-kubeadm join 192.168.0.8:6443 --token drerqr.4bh4i1hduks3ztjf --discovery-token-ca-cert-hash sha256:123
+# Join command, replace 192.168.0.8 with the IP of control-plane node if different
+. $(curl 192.168.0.8:8080/kubeadm_join.sh)
 
 clear
 EOF
+# -------------------------------------------------------------------------------------------
+
 
 # Execution Phase
 . node_initial_setup.sh
