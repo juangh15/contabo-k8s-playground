@@ -1,0 +1,18 @@
+# Setup Ngrok
+cat <<'EOF' > setup_ngrok.sh
+curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz --output ngrok.tgz
+tar -xvzf ./ngrok.tgz -C /usr/local/bin
+
+ngrok authtoken YOUR_TOKEN_HERE
+nohup ngrok http 80 &
+sleep 5
+URL=$(curl -s http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url')
+clear
+echo Ngrok Url:
+echo $URL
+EOF
+
+
+# Execution Phase
+. setup_ngrok.sh
+
