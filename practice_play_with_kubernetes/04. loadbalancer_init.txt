@@ -1,0 +1,37 @@
+# Get kubeconfig external
+cat <<'EOF' > get-kubeconfig-external.sh
+# Replace 192.168.0.8 with the IP of control-plane node if different
+curl 192.168.0.8:8080/kubeconfig_external.yaml > ./kubeconfig_external.yaml
+EOF
+
+
+# Get Ips
+cat <<'EOF' > get_worker_ips.sh
+kubectl --kubeconfig=./kubeconfig_external.yaml get nodes -o jsonpath='{.items[*].metadata.name}{"\n"}' \
+  | grep -o 'worker-node[0-9]\+' \
+  | xargs -I {} kubectl --kubeconfig=./kubeconfig_external.yaml get node {} -o jsonpath='{.status.addresses[?(@.type=="InternalIP")].address}{"\n"}'
+EOF
+
+
+# Loadbalancer Init
+cat <<'EOF' > loadbalancer_init.sh
+# Install basic tools
+echo -e "[base]\nname=CentOS-$releasever - Base\nbaseurl=http://vault.centos.org/centos/7/os/x86_64/\nenabled=1\ngpgcheck=1\ngpgkey=http://vault.centos.org/centos/RPM-GPG-KEY-CentOS-7" | tee /etc/yum.repos.d/CentOS-Base.repo
+rm -rf /etc/yum.repos.d/kubernetes.repo
+yum clean all
+yum install unzip nano sudo openssl strace -y
+
+# Create basic nginx config to initiate container
+mkdir -p /etc/nginx/conf.d/
+echo "events{} http{ server { listen 80; location / { root /usr/share/nginx/html; } } }" > /etc/nginx/conf.d/nginx.conf
+
+docker container rm -f nginx-lb 2>/dev/null
+docker run -d --name nginx-lb -p 8085:80 \
+  -v /etc/nginx/conf.d/nginx.conf:/etc/nginx/nginx.conf:ro nginx
+EOF
+
+
+# Execution Phase
+. get-kubeconfig-external.sh
+. loadbalancer_init.sh
+

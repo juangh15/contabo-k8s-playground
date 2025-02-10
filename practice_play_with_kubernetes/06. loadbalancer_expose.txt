@@ -1,0 +1,9 @@
+# Expose with serveo net
+cat <<'EOF' > loadbalancer_expose.sh
+ssh -R 8085:localhost:8085 serveo.net
+EOF
+
+
+# Execution Phase
+. loadbalancer_expose.sh
+
