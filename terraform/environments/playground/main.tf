@@ -2,7 +2,7 @@ terraform {
   required_providers {
     contabo = {
       source = "contabo/contabo"
-      version = "0.1.26"
+      version = "0.1.31"
     }
   }
 }
@@ -35,7 +35,7 @@ module "deploy_main_vps_instances" {
     contabo = contabo.playground
   }
   init_script_path = "../../modules/instances/cloud_init.yml"
-  os_version = "ubuntu_22_04"
+  os_version = "ubuntu_24_04"
   ssh_public_key = module.deploy_main_vps_secrets.ssh_public_key
   contabo_ssh_secret_ids = [module.deploy_main_vps_secrets.ssh_public_key_id]
 }
