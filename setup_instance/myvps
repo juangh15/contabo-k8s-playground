@@ -116,6 +116,8 @@ reinstall_instance() {
             }'\
     )
 
+    echo "REINSTALLING INSTANCE..."
+
     curl -X PUT 'https://api.contabo.com/v1/compute/instances/'$CNTB_INSTANCE_ID'' \
         -H "Content-Type: application/json" \
         -H "Authorization: Bearer $ACCESS_TOKEN" \
