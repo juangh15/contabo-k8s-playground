@@ -85,6 +85,8 @@ generate_ssh_keys_if_not_exist() {
 }
 
 reinstall_instance() {
+    local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
     if [[ -z "$PUBLIC_SSH_KEY" ]]; then
         echo "Variable PUBLIC_SSH_KEY not declared.
               Generating a new SSH Key with method 'generate_ssh_keys_if_not_exist'
@@ -97,7 +99,7 @@ reinstall_instance() {
     fi
 
     local ACCESS_TOKEN=$(get_access_token)
-    local CLOUD_INIT_RAW=$(<cloud_init.yml)
+    local CLOUD_INIT_RAW=$(<"${SCRIPT_DIR}/cloud_init.yml")
     local CLOUD_INIT_PARSED=$(echo "$CLOUD_INIT_RAW" | sed "s|\${ssh_public_key}|$PUBLIC_SSH_KEY|g")
     local REINSTALL_DATA_JSON=$(
         jq  -n \
