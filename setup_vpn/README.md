@@ -137,10 +137,14 @@ sudo iptables -A FORWARD -i tun0 -o eth0 -j ACCEPT
 Add these rules only if you want to restrict the ports on the server.  
 Copy the following command and run it inside the server.
 ```
+# Enable outter traffic
+sudo iptables -I INPUT 1 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 # SSH:
-sudo iptables -A INPUT -i eth0 -p tcp --dport 2202 -j ACCEPT
+sudo iptables -A INPUT -i eth0 -p tcp --dport 22 -j ACCEPT
+# Custom Web:
+sudo iptables -A INPUT -i eth0 -p tcp --dport 8080 -j ACCEPT
 # HTTPS:
-sudo iptables -A INPUT -i eth0 -p udp --dport 443 -j ACCEPT
+sudo iptables -A INPUT -i eth0 -p tcp --dport 443 -j ACCEPT
 # OpenVPN:
 sudo iptables -A INPUT -i eth0 -p udp --dport 1194 -j ACCEPT
 # DNS:
