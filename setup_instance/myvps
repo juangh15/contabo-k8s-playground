@@ -120,7 +120,7 @@ reinstall_instance() {
         -H "x-request-id: "$(uuidgen)"" \
         -d "$REINSTALL_DATA_JSON"
     
-    echo "REINSTALL SUCCESSFUL... Wait for the instance to be ready...AA    "
+    echo "REINSTALL SUCCESSFUL... Wait for the instance to be ready..."
 }
 
 connect() {
