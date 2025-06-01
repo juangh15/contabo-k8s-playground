@@ -92,6 +92,8 @@ reinstall_instance() {
         generate_ssh_keys_if_not_exist
         local PUBLIC_SSH_KEY_PATH="$HOME/.ssh/ssh_key_for_${CNTB_INSTANCE_IP}.pub"
         local PUBLIC_SSH_KEY=$(<$PUBLIC_SSH_KEY_PATH)
+    else
+        echo "Using PUBLIC_SSH_KEY env variable"
     fi
 
     local ACCESS_TOKEN=$(get_access_token)
