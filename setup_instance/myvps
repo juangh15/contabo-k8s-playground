@@ -85,11 +85,16 @@ generate_ssh_keys_if_not_exist() {
 }
 
 reinstall_instance() {
-    local ACCESS_TOKEN=$(get_access_token)
+    if [[ -z "$PUBLIC_SSH_KEY" ]]; then
+        echo "Variable PUBLIC_SSH_KEY not declared.
+              Generating a new SSH Key with method 'generate_ssh_keys_if_not_exist'
+        "
+        generate_ssh_keys_if_not_exist
+        local PUBLIC_SSH_KEY_PATH="$HOME/.ssh/ssh_key_for_${CNTB_INSTANCE_IP}.pub"
+        local PUBLIC_SSH_KEY=$(<$PUBLIC_SSH_KEY_PATH)
+    fi
 
-    generate_ssh_keys_if_not_exist
-    local PUBLIC_SSH_KEY_PATH="$HOME/.ssh/ssh_key_for_${CNTB_INSTANCE_IP}.pub"
-    local PUBLIC_SSH_KEY=$(<$PUBLIC_SSH_KEY_PATH)
+    local ACCESS_TOKEN=$(get_access_token)
     local CLOUD_INIT_RAW=$(<cloud_init.yml)
     local CLOUD_INIT_PARSED=$(echo "$CLOUD_INIT_RAW" | sed "s|\${ssh_public_key}|$PUBLIC_SSH_KEY|g")
     local REINSTALL_DATA_JSON=$(
