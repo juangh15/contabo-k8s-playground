@@ -1,6 +1,7 @@
 #cloud-config
 users:
   - name: mainuser
+    groups: sudo
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
     ssh-authorized-keys:
@@ -13,4 +14,4 @@ runcmd:
   - DEBIAN_FRONTEND=noninteractive apt install docker-compose -y
   - systemctl restart sshd
   - systemctl restart ssh
-  - echo 'flag' > /tmp/flag
+  - echo 'ready' > /tmp/ready
