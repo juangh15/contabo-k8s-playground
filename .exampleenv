@@ -3,6 +3,7 @@ CLIENT_ID="<your Contabo client ID>"
 CLIENT_SECRET="<your Contabo client secret>"
 API_USER="<your Contabo API user>"
 API_PASSWORD="<your Contabo API password>"
+INSTANCE_IP="<your Contabo Instance IP>"
 # ------------------------------------------------------------------
 
 # Terraform variables
@@ -17,9 +18,14 @@ export CNTB_OAUTH2_CLIENT_SECRET=$CLIENT_SECRET
 export CNTB_OAUTH2_USER=$API_USER
 export CNTB_OAUTH2_PASS=$API_PASSWORD
 
-# Set credentials
-cntb config set-credentials \
-    --oauth2-clientid=$CNTB_OAUTH2_CLIENT_ID \
-    --oauth2-client-secret=$CNTB_OAUTH2_CLIENT_SECRET \
-    --oauth2-user=$CNTB_OAUTH2_USER \
-    --oauth2-password=$CNTB_OAUTH2_PASS
+# IP of the VPS instance
+export CNTB_INSTANCE_IP=$INSTANCE_IP
+
+# Set credentials to CLI if exists
+if [[ -x "/usr/local/bin/cntb" ]]; then
+    /usr/local/bin/cntb config set-credentials \
+        --oauth2-clientid=$CNTB_OAUTH2_CLIENT_ID \
+        --oauth2-client-secret=$CNTB_OAUTH2_CLIENT_SECRET \
+        --oauth2-user=$CNTB_OAUTH2_USER \
+        --oauth2-password=$CNTB_OAUTH2_PASS
+fi

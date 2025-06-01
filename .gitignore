@@ -11,6 +11,7 @@
 *.key*
 *_key*
 *.ovpn*
+*ssh*
 
 # Crash log files
 crash.log

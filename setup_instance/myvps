@@ -1,0 +1,172 @@
+load() {
+    local CONTABO_ENV_FILE_NAME='.contabo_env'
+    if [[ -f "$CONTABO_ENV_FILE_NAME" ]]; then 
+        echo -e "LOADING VARS FROM: '$CONTABO_ENV_FILE_NAME'"
+        source $CONTABO_ENV_FILE_NAME
+    elif [[ -f "../$CONTABO_ENV_FILE_NAME" ]]; then 
+        echo -e "LOADING VARS FROM: '../$CONTABO_ENV_FILE_NAME'"
+        source ../$CONTABO_ENV_FILE_NAME
+    else 
+        echo "FILE NOT FOUND: '$CONTABO_ENV_FILE_NAME'";
+        exit 1
+    fi
+    echo "SUCCESSFULLY LOADED VARS."
+    load_instance_id
+}
+
+get_access_token() {
+    if [[ -z "$CNTB_OAUTH2_CLIENT_ID" || -z "$CNTB_OAUTH2_CLIENT_ID" || -z "$CNTB_OAUTH2_USER" || -z "$CNTB_OAUTH2_PASS" ]]; then
+        echo "A 'CNTB_OAUTH2' secret is missing. Make sure you have ALL the following contabo_env variables declared:
+             CNTB_OAUTH2_CLIENT_ID
+             CNTB_OAUTH2_CLIENT_ID
+             CNTB_OAUTH2_USER
+             CNTB_OAUTH2_PASS
+        " && exit 1
+    fi
+    local ACCESS_TOKEN=$(
+        curl -sSL 'https://auth.contabo.com/auth/realms/contabo/protocol/openid-connect/token' \
+             -d "client_id=$CNTB_OAUTH2_CLIENT_ID" \
+             -d "client_secret=$CNTB_OAUTH2_CLIENT_SECRET" \
+             --data-urlencode "username=$CNTB_OAUTH2_USER" \
+             --data-urlencode "password=$CNTB_OAUTH2_PASS" \
+             -d 'grant_type=password' \
+        | jq -r '.access_token'
+    )
+    echo "$ACCESS_TOKEN"
+}
+
+load_instance_id() {
+    echo "LOADING INSTANCE ID"
+    if [[ -z "$CNTB_INSTANCE_IP" ]]; then 
+        echo 'VAR NOT FOUND: $CNTB_INSTANCE_IP'
+        echo "* Please set the variable on '.contabo_env' file and run the command: 'source $0 load'"
+    fi
+    
+    local API_URL="https://api.contabo.com/v1/compute/instances"
+    local INSTANCE_IP=$CNTB_INSTANCE_IP
+    local ACCESS_TOKEN=$(get_access_token)
+    local PAGE=1
+    local PER_PAGE=100
+
+    while true; do
+        local RESPONSE=$(curl -s -X GET "$API_URL?page=$PAGE&size=$PER_PAGE" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -H "x-request-id: "$(uuidgen)"")
+
+        local MATCH=$(echo "$RESPONSE" | jq -r --arg ip "$INSTANCE_IP" '.data[] | select(.ipConfig.v4.ip == $ip) | .instanceId')
+        if [[ -n "$MATCH" ]]; then break; fi
+
+        local TOTAL_PAGES=$(echo "$RESPONSE" | jq -r '._pagination.totalPages')
+        if [[ "$PAGE" -ge "$TOTAL_PAGES" ]]; then break; fi
+
+        ((PAGE++))
+    done
+
+    if [[ -z "$MATCH" ]]; then echo "Not found instance with IP: $INSTANCE_IP";
+    else
+        export CNTB_INSTANCE_ID=$MATCH
+        echo -e "SUCCESSFULLY LOADED INSTANCE DATA:\nCNTB_INSTANCE_IP='$CNTB_INSTANCE_IP'\nCNTB_INSTANCE_ID='$CNTB_INSTANCE_ID'"
+    fi
+}
+
+generate_ssh_keys_if_not_exist() {
+    local KEY_NAME="$HOME/.ssh/ssh_key_for_${CNTB_INSTANCE_IP}"
+    if [[ ! -f "$KEY_NAME" ]]; then
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        ssh-keygen -t rsa -b 4096 -f "$KEY_NAME" -N "" -C ""
+        echo "🔐 Generated SSH keys: '$KEY_NAME' and '$KEY_NAME.pub'."
+        chmod 600 "$KEY_NAME"
+    else
+        echo "✅ Key: '$KEY_NAME' already exists. SKIPPING"
+        chmod 600 "$KEY_NAME"
+    fi
+}
+
+reinstall_instance() {
+    local SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+    if [[ -z "$PUBLIC_SSH_KEY" ]]; then
+        echo "Variable PUBLIC_SSH_KEY not declared.
+              Generating a new SSH Key with method 'generate_ssh_keys_if_not_exist'
+        "
+        generate_ssh_keys_if_not_exist
+        local PUBLIC_SSH_KEY_PATH="$HOME/.ssh/ssh_key_for_${CNTB_INSTANCE_IP}.pub"
+        local PUBLIC_SSH_KEY=$(<$PUBLIC_SSH_KEY_PATH)
+    else
+        echo "Using PUBLIC_SSH_KEY env variable"
+    fi
+
+    local ACCESS_TOKEN=$(get_access_token)
+    local CLOUD_INIT_RAW=$(<"${SCRIPT_DIR}/cloud_init.yml")
+    local CLOUD_INIT_PARSED=$(echo "$CLOUD_INIT_RAW" | sed "s|\${ssh_public_key}|$PUBLIC_SSH_KEY|g")
+    local REINSTALL_DATA_JSON=$(
+        jq  -n \
+            --arg imageId "db1409d2-ed92-4f2f-978e-7b2fa4a1ec90" \
+            --arg userData "$CLOUD_INIT_PARSED" \
+            --arg rootPassword "167213" \
+            --arg defaultUser "root" \
+            '{
+                imageId: $imageId,
+                sshKeys: [],
+                rootPassword: ($rootPassword | tonumber),
+                userData: $userData,
+                defaultUser: $defaultUser
+            }'\
+    )
+
+    echo "REINSTALLING INSTANCE..."
+
+    curl -X PUT 'https://api.contabo.com/v1/compute/instances/'$CNTB_INSTANCE_ID'' \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer $ACCESS_TOKEN" \
+        -H "x-request-id: "$(uuidgen)"" \
+        -d "$REINSTALL_DATA_JSON"
+    
+    echo "REINSTALL SUCCESSFUL... Wait for the instance to be ready..."
+}
+
+connect() {
+    if [[ -z "$CNTB_INSTANCE_IP" ]]; then echo -e "❌ CNTB_INSTANCE_IP env variable not found.\nRun 'source $0 load' and try again" && return 1; fi
+
+    KEY_PATH="$HOME/.ssh/ssh_key_for_${CNTB_INSTANCE_IP}"
+
+    if [[ ! -f "$KEY_PATH" ]]; then echo "❌ '$KEY_PATH' not found. Save the private key on that path or run 'reinstall_instance' before continue" && return 1; fi
+
+    ssh-keygen -R "$CNTB_INSTANCE_IP" >/dev/null 2>&1
+
+    echo -e "\n🔗 CONNECT COMMAND:\n-------------------"
+    echo "ssh -i '$KEY_PATH' mainuser@$CNTB_INSTANCE_IP"
+    echo -e "-------------------\n"
+
+    ssh -i "$KEY_PATH" \
+        -o StrictHostKeyChecking=no \
+        -o UserKnownHostsFile=/dev/null \
+        mainuser@"$CNTB_INSTANCE_IP"
+    exit 1
+}
+
+status() {
+    KEY_PATH="$HOME/.ssh/ssh_key_for_${CNTB_INSTANCE_IP}"
+    STATUS=$(
+        ssh -i "$KEY_PATH"\
+            -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            mainuser@"$CNTB_INSTANCE_IP" 'cloud-init status' | grep status
+    )
+    echo "$STATUS"
+}
+
+
+# Parse functions
+if declare -f "$1" > /dev/null; then
+  FUNC="$1"
+  shift
+  $FUNC "$@"
+else
+  echo "Invalid function: $1"
+  echo "Available functions:"
+  declare -F | awk '{print $3}'
+  exit 1
+fi

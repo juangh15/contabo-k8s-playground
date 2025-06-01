@@ -1,0 +1,17 @@
+#cloud-config
+users:
+  - name: mainuser
+    groups: sudo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      - ${ssh_public_key}
+runcmd:
+  - sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - sed -i 's/^PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+  - rm -rf /etc/ssh/sshd_config.d/*
+  - curl -fsSL https://get.docker.com | sh
+  - DEBIAN_FRONTEND=noninteractive apt install docker-compose -y
+  - systemctl restart sshd
+  - systemctl restart ssh
+  - echo 'ready' > /tmp/ready
