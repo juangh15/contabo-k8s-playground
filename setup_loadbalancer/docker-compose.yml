@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "443:443"
+    volumes:
+      - certs:/etc/letsencrypt
+      - ./nginx/nginx.template.conf:/etc/nginx/nginx.template.conf:ro
+    environment:
+      - DOMAIN=${DOMAIN}
+    entrypoint: /bin/sh -c "envsubst '\$DOMAIN' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    depends_on:
+      - certbot
+    networks:
+      - internal
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certs:/etc/letsencrypt
+      - ./certbot/init.sh:/init.sh
+    environment:
+      - DOMAIN=${DOMAIN}
+      - EMAIL=${EMAIL}
+    entrypoint: ["/bin/sh", "/init.sh"]
+    networks:
+      - internal
+
+volumes:
+  certs:
+
+networks:
+  internal:
+    driver: bridge
