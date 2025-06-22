@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  holaweb:
+    image: nginx:alpine
+    networks:
+      - internal
+
+networks:
+  internal:
+    external: true
+    name: internal
