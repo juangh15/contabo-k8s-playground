@@ -18,7 +18,7 @@ cd ./setup_loadbalancer
 
 
 # 1.
-docker compose -f compose-network.yml up -d
+docker network create --driver bridge internal
 
 # 2.
 docker compose -f compose-test.yml up -d
