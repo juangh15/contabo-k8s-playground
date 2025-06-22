@@ -10,7 +10,7 @@ services:
       - ./nginx.template.conf:/etc/nginx/nginx.template.conf:ro
     environment:
       - DOMAIN=${DOMAIN}
-    entrypoint: /bin/sh -c "echo \"DOMAIN=$DOMAIN\" && envsubst \"\$DOMAIN\" < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && cat /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    entrypoint: /bin/sh -c "echo \"DOMAIN=$DOMAIN\" && envsubst '\$DOMAIN' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && cat /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
     depends_on:
       - certbot
     networks:
