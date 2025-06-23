@@ -1,8 +1,8 @@
 chmod +x certbot/init.sh
 
 echo '''
-DOMAIN=esjuan.ddns.net
-EMAIL=juansarrias15@gmail.com
+DOMAIN=yourdomain.com
+EMAIL=youremail@example.com
 ''' > ./.env
 
 docker run -d \
