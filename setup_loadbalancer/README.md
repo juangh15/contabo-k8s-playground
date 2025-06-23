@@ -31,7 +31,12 @@ docker compose -f compose-main.yml up -d
 
 docker run --rm \
   --env-file .env \
+  --entrypoint sh \
   -v "$PWD/certbot/www:/var/www/certbot" \
   -v "$PWD/certbot/conf:/etc/letsencrypt" \
   certbot/certbot:latest \
-  sh -c 'certbot certonly --webroot --webroot-path /var/www/certbot/ -d "$DOMAIN"'
+  -c 'certbot certonly --webroot --webroot-path /var/www/certbot/ \
+  -d "$DOMAIN" \
+  --email "$EMAIL" \
+  --agree-tos \
+  --non-interactive'
