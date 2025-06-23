@@ -27,7 +27,7 @@ docker compose -f compose-test.yml up -d
 docker compose -f compose-main.yml up -d
 
 
-
+# 4.
 
 docker run --rm \
   --env-file .env \
@@ -40,3 +40,12 @@ docker run --rm \
   --email "$EMAIL" \
   --agree-tos \
   --non-interactive'
+
+# 5.
+
+docker compose -f compose-main.yml up -d --force-recreate nginx
+
+
+
+
+docker compose -f compose-main.yml down
