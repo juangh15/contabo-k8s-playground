@@ -25,3 +25,13 @@ docker compose -f compose-test.yml up -d
 
 # 3.
 docker compose -f compose-main.yml up -d
+
+
+
+
+docker run --rm \
+  --env-file .env \
+  -v "$PWD/certbot/www:/var/www/certbot" \
+  -v "$PWD/certbot/conf:/etc/letsencrypt" \
+  certbot/certbot:latest \
+  sh -c 'certbot certonly --webroot --webroot-path /var/www/certbot/ -d "$DOMAIN"'
