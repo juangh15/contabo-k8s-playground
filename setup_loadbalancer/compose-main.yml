@@ -16,17 +16,18 @@ services:
     entrypoint: >
       sh -c "
         echo 'Checking certificate...';
-        if [[ ! -f /etc/letsencrypt/live/$$DOMAIN/privkey.pem ]]; then
+        if [ ! -f /etc/letsencrypt/live/$$DOMAIN/privkey.pem ]; then
           echo 'Non existing certificate.';
           envsubst '$$DOMAIN $$EMAIL' < /etc/nginx/nginx.template.initial.conf > /etc/nginx/nginx.conf && 
           cat /etc/nginx/nginx.conf && 
-          nginx -g 'daemon off;'"
+          nginx -g 'daemon off;';
         else
           echo 'Existing certificate.';
           envsubst '$$DOMAIN $$EMAIL' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf && 
           cat /etc/nginx/nginx.conf && 
-          nginx -g 'daemon off;'"
+          nginx -g 'daemon off;';
         fi
+      "
     networks:
       - internal
 
