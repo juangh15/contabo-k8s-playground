@@ -1,29 +1,6 @@
 version: '3.8'
 
 services:
-  nginx:
-    image: nginx:latest
-    ports:
-      - "443:443"
-    volumes:
-      - certs:/etc/letsencrypt
-      - ./nginx.template.conf:/etc/nginx/nginx.template.conf:ro
-    environment:
-      - DOMAIN=${DOMAIN}
-    entrypoint: >
-      sh -c "
-        echo 'Waiting for certbot...';
-        while [ ! -f /etc/letsencrypt/.ready ]; do
-          sleep 2;
-        done;
-        envsubst '$$DOMAIN $$EMAIL' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf &&
-        nginx -g 'daemon off;'"
-
-    depends_on:
-      - certbot
-    networks:
-      - internal
-
   certbot:
     image: certbot/certbot
     volumes:
