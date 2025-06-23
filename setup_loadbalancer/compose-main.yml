@@ -10,6 +10,7 @@ services:
       - ./certbot/www:/var/www/certbot/:ro
       - ./certbot/conf/:/etc/letsencrypt/:ro
       - ./nginx/nginx.template.conf:/etc/nginx/nginx.template.conf:ro
+      - ./nginx/nginx.template.initial.conf:/etc/nginx/nginx.template.initial.conf:ro
     environment:
       - DOMAIN=${DOMAIN}
     entrypoint: >
