@@ -11,9 +11,13 @@ services:
     environment:
       - DOMAIN=${DOMAIN}
     entrypoint: >
-      sh -c "envsubst '$$DOMAIN $$EMAIL' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf &&
-            cat /etc/nginx/nginx.conf &&
-            nginx -g 'daemon off;'"
+      sh -c "
+        echo 'Waiting for certbot...';
+        while [ ! -f /etc/letsencrypt/.ready ]; do
+          sleep 2;
+        done;
+        envsubst '$$DOMAIN $$EMAIL' < /etc/nginx/nginx.template.conf > /etc/nginx/nginx.conf &&
+        nginx -g 'daemon off;'"
 
     depends_on:
       - certbot
